@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  vote:
+    image: dockersamples/examplevotingapp_vote:latest
+    networks:
+      - vote_network
+    ports:
+      - "5000:80"
+
+  redis:
+    image: redis:alpine
+    networks:
+      - vote_network
+
+  worker:
+    image: dockersamples/examplevotingapp_worker:latest
+    networks:
+      - vote_network
+
+  db:
+    image: postgres:12
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: securepassword
+      POSTGRES_DB: votes
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - vote_network
+
+  result:
+    image: dockersamples/examplevotingapp_result:latest
+    networks:
+      - vote_network
+    ports:
+      - "5001:80"
+
+  visualizer:
+    image: dockersamples/visualizer:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - vote_network
+    ports:
+      - "8080:8080"
+
+networks:
+  vote_network:
+    driver: overlay
+
+volumes:
+  db_data:
